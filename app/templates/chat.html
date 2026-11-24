@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG KB — Chat</title>
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body class="h-dvh w-full bg-[#0f0f0f] text-gray-100 overflow-hidden flex">
+  <div class="flex h-full w-full relative">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"></div>
+
+    <!-- ─── Sidebar ─────────────────────────────────────────── -->
+    <aside id="sidebar" class="w-72 bg-[#171717] flex flex-col border-r border-gray-800 transition-transform duration-300 absolute z-50 h-full -translate-x-full md:relative md:translate-x-0 md:flex-shrink-0">
+      <!-- New Chat -->
+      <div class="p-3">
+        <button onclick="newChat()" class="w-full flex items-center gap-2 px-4 py-3 bg-[#212121] hover:bg-[#2a2a2a] rounded-xl text-sm transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          New Chat
+        </button>
+      </div>
+
+      <!-- Chat History -->
+      <div class="flex-1 overflow-y-auto px-3 space-y-1" id="chatList">
+        <p class="text-xs text-gray-500 px-2 py-1">Loading chats...</p>
+      </div>
+
+      <!-- User info -->
+      <div class="p-3 border-t border-gray-800/50 mt-auto">
+        <!-- Model Badge -->
+        <div class="flex items-center justify-between px-3 py-2 mb-2 text-xs text-gray-500 opacity-70 hover:opacity-100 transition-opacity" id="modelBadgeContainer">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" id="modelStatusDot"></span>
+            Powered by: <strong id="modelNameLabel" class="text-gray-400 font-medium">Loading…</strong>
+          </span>
+        </div>
+        <div class="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#212121] cursor-pointer transition-colors" onclick="toggleUserMenu()">
+          <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" id="userAvatar">?</div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate leading-tight" id="userName">Loading...</p>
+            <p class="text-xs text-gray-500 leading-tight" id="userRole"></p>
+          </div>
+          <div class="flex-shrink-0">
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01"/></svg>
+          </div>
+        </div>
+        <!-- User dropdown -->
+        <div id="userMenu" class="hidden mt-2 bg-[#212121] rounded-xl border border-gray-700 overflow-hidden">
+          <a href="/admin" id="adminLink" class="hidden flex items-center gap-2 px-4 py-2 text-sm hover:bg-[#2a2a2a] transition"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Admin Panel</a>
+          <button onclick="logout()" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm hover:bg-[#2a2a2a] text-red-400 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Sign Out</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ─── Main Content ────────────────────────────────────── -->
+    <main class="flex-1 flex flex-col min-w-0">
+      <!-- Top Bar -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-4 px-3 sm:px-6 py-2.5 border-b border-gray-800 bg-[#171717] min-h-[48px]">
+        <!-- Toggle sidebar on mobile -->
+        <button aria-label="Toggle sidebar" onclick="toggleSidebar()" class="md:hidden flex items-center gap-2 px-3 py-1.5 bg-[#212121] border border-gray-700 hover:border-gray-500 rounded-lg text-sm text-gray-300 hover:text-white transition-all shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <span class="font-medium">History</span>
+        </button>
+
+        <div class="flex-1"></div>
+
+        <!-- KB selector -->
+        <div class="flex items-center gap-1.5 sm:gap-2 relative ml-auto">
+          <label class="text-xs text-gray-400 whitespace-nowrap hidden sm:inline">Knowledge Base:</label>
+          <button onclick="toggleKBDropdown()" class="flex items-center gap-2 bg-[#212121] border border-gray-700 rounded-lg px-3 py-1.5 text-sm hover:border-gray-500 transition">
+            <span id="kbSelectedLabel">Select KB</span>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="kbDropdown" class="hidden absolute top-full right-0 mt-1 bg-[#212121] border border-gray-700 rounded-xl shadow-xl z-50 min-w-[160px]">
+            <div id="kbCheckboxes" class="p-2 space-y-1 max-h-64 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <!-- Source filter -->
+        <div class="flex items-center gap-1.5 sm:gap-2 relative ml-1 sm:ml-2">
+          <label class="text-xs text-gray-400 whitespace-nowrap hidden sm:inline">Source:</label>
+          <button onclick="toggleSourceDropdown()" class="flex items-center gap-2 bg-[#212121] border border-gray-700 rounded-lg px-3 py-1.5 text-sm hover:border-gray-500 transition">
+            <span id="sourceSelectedLabel">All</span>
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="sourceDropdown" class="hidden absolute top-full right-0 mt-1 bg-[#212121] border border-gray-700 rounded-xl shadow-xl z-50 min-w-[160px]">
+            <div class="p-2 space-y-1">
+              <label class="kb-check-item flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#2a2a2a] cursor-pointer text-sm">
+                <input type="checkbox" value="youtube" class="source-filter-checkbox" onchange="updateSourceLabel()"> YouTube
+              </label>
+              <label class="kb-check-item flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#2a2a2a] cursor-pointer text-sm">
+                <input type="checkbox" value="pdf" class="source-filter-checkbox" onchange="updateSourceLabel()"> PDF
+              </label>
+              <label class="kb-check-item flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#2a2a2a] cursor-pointer text-sm">
+                <input type="checkbox" value="markdown" class="source-filter-checkbox" onchange="updateSourceLabel()"> Markdown
+              </label>
+              <label class="kb-check-item flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#2a2a2a] cursor-pointer text-sm">
+                <input type="checkbox" value="docx" class="source-filter-checkbox" onchange="updateSourceLabel()"> Word (docx)
+              </label>
+              <label class="kb-check-item flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#2a2a2a] cursor-pointer text-sm">
+                <input type="checkbox" value="txt" class="source-filter-checkbox" onchange="updateSourceLabel()"> Text (txt)
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages Area -->
+      <div class="flex-1 overflow-y-auto" id="messagesContainer">
+        <div class="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6 sm:space-y-8" id="messages">
+          <!-- Welcome screen (populated by JS with KB list) -->
+          <div id="welcomeScreen" class="flex flex-col items-center justify-center h-full text-center py-12">
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="border-t border-gray-800 bg-[#171717]">
+        <div class="max-w-4xl mx-auto px-3 sm:px-6 py-2 sm:py-3">
+          <!-- Image file list -->
+          <div id="imagePreview" class="hidden mb-2 bg-[#212121] border border-gray-700 rounded-xl px-3 py-2">
+            <div id="imageFileList" class="flex flex-col gap-1"></div>
+          </div>
+          <input type="file" id="imageInput" accept="image/*" class="hidden" multiple>
+          <form id="chatForm">
+            <div class="relative flex items-end gap-2 bg-[#212121] border border-gray-700 rounded-2xl px-3 py-2 focus-within:border-blue-500 transition" id="dropZone">
+              <!-- Image attach button (left) -->
+              <button type="button" aria-label="Attach image" onclick="document.getElementById('imageInput').click()"
+                      class="flex items-center justify-center flex-shrink-0 hover:bg-[#2a2a2a] rounded-xl p-1.5 transition-colors self-end mb-0.5"
+                      title="Attach image">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </button>
+              <!-- Textarea -->
+              <textarea id="chatInput"
+                        rows="1"
+                        placeholder="Send a message or drop an image..."
+                        class="flex-1 bg-transparent text-white placeholder-gray-500 resize-none focus:outline-none py-1.5"
+                        style="max-height: 200px;"></textarea>
+              <!-- Send button (right) -->
+              <button type="submit" id="sendBtn" aria-label="Send message"
+                      class="flex items-center justify-center flex-shrink-0 bg-white hover:bg-gray-200 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl w-8 h-8 transition-colors self-end mb-0.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m-7 7l7-7 7 7" stroke="black"/>
+                </svg>
+              </button>
+              <!-- Drop overlay -->
+              <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/20 border-2 border-dashed border-blue-500 rounded-2xl flex items-center justify-center pointer-events-none">
+                <span class="text-blue-400 text-sm font-medium">Drop image here</span>
+              </div>
+            </div>
+            <div class="text-center mt-2 hidden md:block">
+              <span class="text-xs text-gray-400">Press <kbd class="font-sans px-1 py-0.5 bg-[#212121] border border-gray-700 rounded">Enter</kbd> to send, <kbd class="font-sans px-1 py-0.5 bg-[#212121] border border-gray-700 rounded">Shift</kbd> + <kbd class="font-sans px-1 py-0.5 bg-[#212121] border border-gray-700 rounded">Enter</kbd> for new line.</span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right References Sidebar -->
+    <aside id="refSidebar" class="hidden fixed inset-0 sm:relative sm:inset-auto w-full sm:w-80 lg:w-96 border-l-0 sm:border-l border-gray-800 bg-[#171717] flex-col transition-all duration-300 z-50 sm:z-40">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-800 shrink-0 min-h-[48px]">
+        <h3 id="refSidebarTitle" class="text-sm font-semibold text-gray-200">Reference Sources</h3>
+        <button onclick="closeRefSidebar()" class="text-gray-500 hover:text-white transition-colors" title="Close references">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="refSidebarContent" class="flex-1 overflow-y-auto p-4 space-y-4" style="scrollbar-width:thin;scrollbar-color:#333 transparent;">
+        <!-- Reference cards will be injected here -->
+      </div>
+    </aside>
+  </div>
+
+  <script src="/static/js/chat.js"></script>
+</body>
+</html>

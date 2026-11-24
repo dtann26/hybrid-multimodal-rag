@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG KB — Admin</title>
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body class="min-h-dvh bg-[#0f0f0f] text-gray-100">
+
+  <!-- Top Nav -->
+  <nav class="bg-[#171717] border-b border-gray-800 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+    <div class="flex items-center gap-4">
+      <a href="/chat" class="text-gray-400 hover:text-white transition">← Back to Chat</a>
+      <h1 class="text-lg font-semibold">Admin Panel</h1>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold" id="adminAvatar">?</div>
+        <span class="text-sm text-gray-400" id="adminUser"></span>
+      </div>
+      <button onclick="logout()" class="text-sm text-red-400 hover:text-red-300 transition">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- Tabs -->
+  <div class="bg-[#171717] border-b border-gray-800 px-4 sm:px-6 overflow-x-auto">
+    <div class="flex gap-1 min-w-max" role="tablist" aria-orientation="horizontal">
+      <button onclick="showTab('kb')" role="tab" aria-selected="true" aria-controls="tab-kb" tabindex="0" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 outline-none border-blue-500 text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#171717]" data-tab="kb">Knowledge Bases</button>
+      <button onclick="showTab('models')" role="tab" aria-selected="false" aria-controls="tab-models" tabindex="-1" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 outline-none border-transparent text-gray-500 hover:text-gray-300 aria-selected:border-blue-500 aria-selected:text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#171717]" data-tab="models">Models</button>
+      <button onclick="showTab('roles')" role="tab" aria-selected="false" aria-controls="tab-roles" tabindex="-1" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 outline-none border-transparent text-gray-500 hover:text-gray-300 aria-selected:border-blue-500 aria-selected:text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#171717]" data-tab="roles">Roles</button>
+      <button onclick="showTab('users')" role="tab" aria-selected="false" aria-controls="tab-users" tabindex="-1" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 outline-none border-transparent text-gray-500 hover:text-gray-300 aria-selected:border-blue-500 aria-selected:text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#171717]" data-tab="users">Users</button>
+      <button onclick="showTab('config')" role="tab" aria-selected="false" aria-controls="tab-config" tabindex="-1" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 outline-none border-transparent text-gray-500 hover:text-gray-300 aria-selected:border-blue-500 aria-selected:text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#171717]" data-tab="config">Configuration</button>
+      <button onclick="showTab('import')" role="tab" aria-selected="false" aria-controls="tab-import" tabindex="-1" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 outline-none border-transparent text-gray-500 hover:text-gray-300 aria-selected:border-blue-500 aria-selected:text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#171717]" data-tab="import">Import</button>
+      <button onclick="showTab('utilities')" role="tab" aria-selected="false" aria-controls="tab-utilities" tabindex="-1" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 outline-none border-transparent text-gray-500 hover:text-gray-300 aria-selected:border-blue-500 aria-selected:text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#171717]" data-tab="utilities">Utilities</button>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+
+    <!-- KB Tab -->
+    <div id="tab-kb" class="tab-content">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6">
+        <h2 class="text-xl font-semibold">Knowledge Bases</h2>
+        <button onclick="showCreateKBModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium transition">+ Create KB</button>
+      </div>
+      <div id="kbList" class="space-y-3">
+        <p class="text-gray-500">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Models Tab -->
+    <div id="tab-models" class="tab-content hidden">
+
+      <!-- LLM Hot-Swap (admin-only interactive switcher) -->
+      <div class="mb-8 bg-[#171717] border border-gray-800 rounded-xl p-6" id="llmSwapCard">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-lg font-semibold">LLM Hot-Swap</h3>
+            <p class="text-sm text-gray-400 mt-1">Switch the active vLLM model on the fly. Only one LLM can run at a time due to VRAM constraints.</p>
+          </div>
+          <div id="llmStatusBadge" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-green-900/40 text-green-400 border border-green-800">
+            Ready
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Current Model</label>
+            <div id="llmCurrentModel" class="text-sm font-medium text-white bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2">—</div>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Switch To</label>
+            <select id="llmTargetSelect" class="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              <option value="">Select a model…</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button onclick="switchLLM()" id="llmSwitchBtn"
+                    class="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl text-sm font-medium transition">
+              Switch Model
+            </button>
+          </div>
+        </div>
+
+        <!-- Error display -->
+        <div id="llmErrorBox" class="hidden p-3 bg-red-900/20 border border-red-800 rounded-lg text-sm text-red-300 mt-2"></div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6">
+        <h2 class="text-xl font-semibold">Model Registry</h2>
+        <button onclick="showRegisterModelModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium transition">+ Register Model</button>
+      </div>
+      <div id="modelList" class="space-y-3">
+        <p class="text-gray-500">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Roles Tab -->
+    <div id="tab-roles" class="tab-content hidden">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6">
+        <h2 class="text-xl font-semibold">Access Roles</h2>
+        <button onclick="showCreateRoleModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium transition">+ Create Role</button>
+      </div>
+      <p class="text-gray-400 text-sm mb-4">Create roles to control which knowledge bases users can access. Assign a role to a user in the Users tab.</p>
+      <div id="roleList" class="space-y-3">
+        <p class="text-gray-500">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Config Tab -->
+    <div id="tab-config" class="tab-content hidden">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-6">
+        <h2 class="text-xl font-semibold">System Configuration</h2>
+        <div class="flex gap-2">
+          <button onclick="exportConfig()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm transition">Export JSON</button>
+          <button onclick="saveConfig()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium transition">Save Changes</button>
+        </div>
+      </div>
+      <div id="configForm" class="space-y-6 text-gray-200">
+        <p class="text-gray-500">Loading configuration...</p>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="tab-users" class="tab-content hidden">
+      <h2 class="text-xl font-semibold mb-6">User Management</h2>
+      <div id="userList" class="space-y-3">
+        <p class="text-gray-500">Loading...</p>
+      </div>
+      <div id="userPagination" class="flex items-center justify-center gap-2 mt-4"></div>
+    </div>
+
+    <!-- Utilities Tab -->
+    <div id="tab-utilities" class="tab-content hidden">
+      <h2 class="text-xl font-semibold mb-6">System Utilities</h2>
+
+      <!-- System Stats -->
+      <div class="mb-8">
+        <h3 class="text-lg font-medium mb-3">System Overview</h3>
+        <div id="systemStats" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <p class="text-gray-500 col-span-full">Loading...</p>
+        </div>
+      </div>
+
+      <!-- KB / Milvus Stats -->
+      <div class="mb-8">
+        <h3 class="text-lg font-medium mb-3">Knowledge Base &amp; Vector Index</h3>
+        <div id="kbStats" class="space-y-3">
+          <p class="text-gray-500">Loading...</p>
+        </div>
+      </div>
+
+      <!-- Dangerous Actions -->
+      <div class="mb-8">
+        <h3 class="text-lg font-medium mb-3 text-red-400">Danger Zone</h3>
+        <div class="space-y-3">
+          <div class="bg-[#171717] border border-red-900/40 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h4 class="font-medium">Clear All Chat History</h4>
+              <p class="text-sm text-gray-400">Delete every chat session and message across all users. This cannot be undone.</p>
+            </div>
+            <button onclick="clearAllChats()" class="w-full sm:w-auto px-4 py-2 bg-red-900 hover:bg-red-800 rounded-lg text-sm transition flex-shrink-0">Clear Chats</button>
+          </div>
+          <div class="bg-[#171717] border border-red-900/40 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h4 class="font-medium">Purge Orphan Chunks</h4>
+              <p class="text-sm text-gray-400">Remove document chunks whose parent document no longer exists in the database.</p>
+            </div>
+            <button onclick="purgeOrphanChunks()" class="w-full sm:w-auto px-4 py-2 bg-red-900 hover:bg-red-800 rounded-lg text-sm transition flex-shrink-0">Purge</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Tab -->
+    <div id="tab-import" class="tab-content hidden">
+      <h2 class="text-xl font-semibold mb-6">Import Transcripts</h2>
+      <div class="bg-[#171717] rounded-xl border border-gray-800 p-6 max-w-lg">
+        <p class="text-gray-400 text-sm mb-4">Import existing YouTube transcript JSON files from <code>data/transcribe_result/</code> into a knowledge base.</p>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Knowledge Base</label>
+            <select id="importKBSelect" class="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Batch Size</label>
+            <input type="number" id="importBatchSize" value="16" min="1" max="128"
+                   class="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+          </div>
+          <button onclick="importTranscripts()" id="importBtn"
+                  class="w-full py-2 bg-green-600 hover:bg-green-700 rounded-xl text-sm font-medium transition">
+            Start Import
+          </button>
+          <div id="importResult" class="hidden mt-4 p-4 bg-[#0f0f0f] rounded-lg text-sm"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification System & Custom Alert Modal -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2"></div>
+
+  <div id="alertModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4">
+    <div class="bg-[#171717] rounded-2xl border border-gray-700 p-6 w-full max-w-sm text-center">
+      <div class="w-12 h-12 rounded-full bg-blue-900/30 text-blue-500 mx-auto flex items-center justify-center mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h3 class="text-lg font-semibold mb-2">Notification</h3>
+      <p id="alertModalMessage" class="text-sm text-gray-400 mb-6"></p>
+      <button onclick="hideModal('alertModal')" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium transition">OK</button>
+    </div>
+  </div>
+
+  <!-- Create KB Modal -->
+  <div id="createKBModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div class="bg-[#171717] rounded-2xl border border-gray-700 p-6 w-full max-w-md">
+      <h3 class="text-lg font-semibold mb-4">Create Knowledge Base</h3>
+      <div class="space-y-3">
+        <input type="text" id="newKBName" placeholder="Knowledge Base name"
+               class="w-full px-4 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+        <textarea id="newKBDesc" placeholder="Description (optional)" rows="2"
+                  class="w-full px-4 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"></textarea>
+        <div class="flex gap-3 justify-end mt-4">
+          <button onclick="hideModal('createKBModal')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">Cancel</button>
+          <button onclick="createKB()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition">Create</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register Model Modal -->
+  <div id="registerModelModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div class="bg-[#171717] rounded-2xl border border-gray-700 p-6 w-full max-w-md">
+      <h3 class="text-lg font-semibold mb-4">Register Model</h3>
+      <div class="space-y-3">
+        <input type="text" id="newModelName" placeholder="Model name"
+               class="w-full px-4 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+        <select id="newModelType" class="w-full px-4 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+          <option value="llm">LLM</option>
+          <option value="embedding">Embedding</option>
+          <option value="reranker">Reranker</option>
+        </select>
+        <input type="text" id="newModelPath" placeholder="HuggingFace repo or local path"
+               class="w-full px-4 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+        <input type="number" id="newModelDim" placeholder="Vector dimension (embedding only)"
+               class="w-full px-4 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" id="newModelDefault" class="rounded"> Set as default
+        </label>
+        <div class="flex gap-3 justify-end mt-4">
+          <button onclick="hideModal('registerModelModal')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">Cancel</button>
+          <button onclick="registerModel()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition">Register</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multi-File Upload Modal -->
+  <div id="uploadDocModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div class="bg-[#171717] rounded-2xl border border-gray-700 p-6 w-full max-w-lg">
+      <h3 class="text-lg font-semibold mb-4">Upload Documents</h3>
+      <div class="space-y-3">
+        <input type="hidden" id="uploadFolderId">
+
+        <!-- KB + Folder selection -->
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Knowledge Base</label>
+          <select id="uploadKBSelect" onchange="loadUploadFolders()"
+                  class="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Folder</label>
+          <select id="uploadFolderSelect"
+                  class="w-full bg-[#0f0f0f] border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"></select>
+        </div>
+
+        <!-- Drop zone -->
+        <input type="file" id="uploadFiles" multiple
+               accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,.json,.html,.htm,.xml,.rtf"
+               style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;">
+        <div id="dropZone" class="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center cursor-pointer hover:border-blue-500 transition">
+          <svg class="w-8 h-8 mx-auto text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          <p class="text-sm text-gray-400">Click or drag files here</p>
+          <p class="text-xs text-gray-600 mt-1">Supported: pdf, docx, pptx, xlsx, txt, md, csv, json, html, xml, rtf</p>
+        </div>
+
+        <!-- File list preview -->
+        <div id="uploadFileList" class="max-h-48 overflow-y-auto space-y-1"></div>
+
+        <!-- Upload result -->
+        <div id="uploadResult" class="hidden p-3 bg-[#0f0f0f] rounded-lg text-sm max-h-64 overflow-y-auto"></div>
+
+        <div class="flex gap-3 justify-end">
+          <button onclick="hideModal('uploadDocModal')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">Close</button>
+          <button onclick="uploadMultipleDocuments()" id="uploadBtn"
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition disabled:opacity-50" disabled>Upload &amp; Chunk</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Role Modal -->
+  <div id="createRoleModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div class="bg-[#171717] rounded-2xl border border-gray-700 p-6 w-full max-w-md">
+      <h3 class="text-lg font-semibold mb-4">Create Access Role</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Role Name</label>
+          <input type="text" id="newRoleName" placeholder="e.g. Theology Student"
+                 class="w-full px-4 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+          <textarea id="newRoleDesc" placeholder="What this role is for..." rows="2"
+                    class="w-full px-4 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Knowledge Base Access</label>
+          <div id="roleKBCheckboxes" class="max-h-48 overflow-y-auto bg-[#0f0f0f] border border-gray-700 rounded-lg p-2 space-y-1">
+            <p class="text-gray-500 text-xs">Loading...</p>
+          </div>
+        </div>
+        <div class="flex gap-3 justify-end mt-4">
+          <button onclick="hideModal('createRoleModal')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">Cancel</button>
+          <button onclick="createRole()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition">Create</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Role Modal -->
+  <div id="editRoleModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div class="bg-[#171717] rounded-2xl border border-gray-700 p-6 w-full max-w-md">
+      <h3 class="text-lg font-semibold mb-4">Edit Role — <span id="editRoleTitle"></span></h3>
+      <div class="space-y-3">
+        <input type="hidden" id="editRoleId">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Role Name</label>
+          <input type="text" id="editRoleName"
+                 class="w-full px-4 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+          <textarea id="editRoleDesc" rows="2"
+                    class="w-full px-4 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Knowledge Base Access</label>
+          <div id="editRoleKBCheckboxes" class="max-h-48 overflow-y-auto bg-[#0f0f0f] border border-gray-700 rounded-lg p-2 space-y-1">
+          </div>
+        </div>
+        <div class="flex gap-3 justify-end mt-4">
+          <button onclick="hideModal('editRoleModal')" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">Cancel</button>
+          <button onclick="saveRole()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+# ============================================================================
+# Local data, databases and generated artifacts
+# ============================================================================
+# The local SQLite DB, backups and extracted chunks are ~2 GB and machine
+# specific. They are rebuilt/ingested locally, so never commit them.
+data/*
+!data/.gitkeep
+*.db
+*.db.backup*
+*.sqlite
+*.sqlite3
+
+# ============================================================================
+# Secrets / local configuration
+# ============================================================================
+# .env holds RAG_SECRET_KEY and the superadmin password. Keep it local.
+.env
+.env.*
+!.env.example
+
+# ============================================================================
+# Model weights (served by the docker-compose vLLM services)
+# ============================================================================
+models/*
+!models/.gitkeep
+
+# ============================================================================
+# Python
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ============================================================================
+# Logs, temp files and OS/editor noise
+# ============================================================================
+*.log
+*.tmp
+done.txt
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

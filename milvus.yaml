@@ -1,0 +1,17 @@
+# milvus.yaml
+common:
+  retentionDuration: 1800        # Keep deleted/dropped data for 30 minutes only
+                                  # Default 0 = infinite retention. This is critical.
+
+dataCoord:
+  compaction:
+    enableAutoCompaction: true
+  gc:
+    interval: 3600                # Run GC scan every 1 hour
+    missingTolerance: 1800       # Delete orphaned segments after 30 minutes
+    dropTolerance: 1800          # Delete dropped collection data after 30 minutes
+
+woodpecker:
+  retention:
+    maxAge: 1800          # Keep MQ messages for 1 day max
+    maxBytes: 1073741824   # 1 GB cap per topic/stream

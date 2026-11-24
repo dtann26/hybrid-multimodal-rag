@@ -1,0 +1,170 @@
+services:
+  etcd:
+    container_name: milvus-etcd
+    image: quay.io/coreos/etcd:v3.5.25
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/etcd:/etcd
+    command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+
+  minio:
+    container_name: milvus-minio
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    ports:
+      - "12002:9001"
+      - "12001:9000"
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/minio:/minio_data
+    command: minio server /minio_data --console-address ":9001"
+
+  standalone:
+    container_name: milvus-standalone
+    image: milvusdb/milvus:v2.6.14-gpu
+    command: [ "milvus", "run", "standalone" ]
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+      MQ_TYPE: woodpecker
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus:/var/lib/milvus
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/milvus.yaml:/milvus/configs/user.yaml
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [ "gpu" ]
+              device_ids: [ "0" ]
+    depends_on:
+      - "etcd"
+      - "minio"
+
+
+
+
+  vllm-llm:
+    image: vllm/vllm-openai:gemma4-cu130
+    container_name: vllm-llm
+    restart: unless-stopped
+    ports:
+      - "${VLLM_PORT:-8001}:8001"
+    shm_size: "64gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+    volumes:
+      - ./hf_cache:/root/.cache/huggingface
+      - ./models:/models
+    environment:
+      - VLLM_LOGGING_LEVEL=INFO
+      - VLLM_ATTENTION_BACKEND=FLASH_ATTN
+    command: >
+      --model /models/${LLM_MODEL_DIR_NAME}
+      --served-model-name ${LLM_MODEL_DIR_NAME}
+      --port 8001
+      --host 0.0.0.0
+      --max-model-len 16384
+      --gpu-memory-utilization 0.40
+      --max-num-seqs 128
+      --tensor-parallel-size 1
+
+
+
+
+
+
+  vllm-embedding:
+    image: nvcr.io/nvidia/vllm:26.03.post1-py3
+    container_name: vllm-embedding
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    shm_size: "16gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+    volumes:
+      - ./hf_cache:/root/.cache/huggingface
+      - ./models:/models
+    environment:
+      - VLLM_LOGGING_LEVEL=INFO
+    depends_on:
+      - "standalone"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s -f http://localhost:8002/v1/models || exit 1" ]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 3m
+    command: >
+      vllm serve /models/Qwen3-VL-Embedding-2B  
+      --port 8002  
+      --served-model-name Qwen3-VL-Embedding-2B  
+      --max-model-len 4096  
+      --gpu-memory-utilization 0.15  
+      --tensor-parallel-size 1  
+      --runner pooling
+
+  vllm-reranker:
+    image: nvcr.io/nvidia/vllm:26.03.post1-py3
+    container_name: vllm-reranker
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    shm_size: "16gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+    volumes:
+      - ./hf_cache:/root/.cache/huggingface
+      - ./models:/models
+      - ./templates:/templates
+    environment:
+      - VLLM_LOGGING_LEVEL=INFO
+    depends_on:
+      vllm-embedding:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s -f http://localhost:8003/v1/models || exit 1" ]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 3m
+    command: >
+      vllm serve /models/Qwen3-VL-Reranker-2B  
+      --port 8003  
+      --served-model-name Qwen3-VL-Reranker-2B  
+      --max-model-len 4096  
+      --gpu-memory-utilization 0.15  
+      --tensor-parallel-size 1  
+      --runner pooling  
+      --hf_overrides '{"architectures": ["Qwen3VLForSequenceClassification"],"classifier_from_token": ["no", "yes"],"is_original_qwen3_reranker": true}'  
+      --chat-template /templates/qwen3_vl_reranker.jinja
+
+networks:
+  default:
+    name: milvus

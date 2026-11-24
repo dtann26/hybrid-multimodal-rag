@@ -1,0 +1,257 @@
+============================================================
+Testing Qwen3 Reranker (port 8003)
+============================================================
+=== Reranker /v1/models ===
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "Qwen3-VL-Reranker-2B",
+      "object": "model",
+      "created": 1776709517,
+      "owned_by": "vllm",
+      "root": "/models/Qwen3-VL-Reranker-2B",
+      "parent": null,
+      "max_model_len": 4096,
+      "permission": [
+        {
+          "id": "modelperm-95c1063d04b82be0",
+          "object": "model_permission",
+          "created": 1776709517,
+          "allow_create_engine": false,
+          "allow_sampling": true,
+          "allow_logprobs": true,
+          "allow_search_indices": false,
+          "allow_view": true,
+          "allow_fine_tuning": false,
+          "organization": "*",
+          "group": null,
+          "is_blocking": false
+        }
+      ]
+    }
+  ]
+}
+
+Health check: PASSED
+=== Reranker /score ===
+Status: 200
+{
+  "id": "score-95e2ea85380caf13",
+  "object": "list",
+  "created": 1776709517,
+  "model": "Qwen3-VL-Reranker-2B",
+  "data": [
+    {
+      "index": 0,
+      "object": "score",
+      "score": 0.5989469885826111
+    },
+    {
+      "index": 1,
+      "object": "score",
+      "score": 0.39428991079330444
+    },
+    {
+      "index": 2,
+      "object": "score",
+      "score": 0.4325879216194153
+    },
+    {
+      "index": 3,
+      "object": "score",
+      "score": 0.3609037399291992
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 320,
+    "total_tokens": 320,
+    "completion_tokens": 0,
+    "prompt_tokens_details": null
+  }
+}
+
+/score test: PASSED
+=== Reranker /rerank ===
+Status: 200
+{
+  "id": "rerank-b2ccba9dfd5e7fb1",
+  "model": "Qwen3-VL-Reranker-2B",
+  "usage": {
+    "prompt_tokens": 320,
+    "total_tokens": 320
+  },
+  "results": [
+    {
+      "index": 0,
+      "document": {
+        "text": "Paris is the capital and most populous city of France.",
+        "multi_modal": null
+      },
+      "relevance_score": 0.6013171672821045
+    },
+    {
+      "index": 2,
+      "document": {
+        "text": "The Eiffel Tower is located in Paris.",
+        "multi_modal": null
+      },
+      "relevance_score": 0.4325879216194153
+    },
+    {
+      "index": 1,
+      "document": {
+        "text": "Berlin is the capital of Germany.",
+        "multi_modal": null
+      },
+      "relevance_score": 0.39428991079330444
+    }
+  ]
+}
+
+/rerank test: PASSED
+=== Reranker Multimodal /score ===
+Status: 500
+{
+  "error": {
+    "message": "429 Client Error: Use thumbnail steps listed on https://w.wiki/GHai. Please contact noc@wikimedia.org for further information (92dd0a1) for url: https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg",
+    "type": "InternalServerError",
+    "param": null,
+    "code": 500
+  }
+}
+
+Multimodal rerank test: PASSED
+
+============================================================
+Testing Qwen3 Embedding (port 8002)
+============================================================
+=== Embedding /v1/models ===
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "Qwen3-VL-Embedding-2B",
+      "object": "model",
+      "created": 1776709519,
+      "owned_by": "vllm",
+      "root": "/models/Qwen3-VL-Embedding-2B",
+      "parent": null,
+      "max_model_len": 4096,
+      "permission": [
+        {
+          "id": "modelperm-bbdba46cc660b0d4",
+          "object": "model_permission",
+          "created": 1776709519,
+          "allow_create_engine": false,
+          "allow_sampling": true,
+          "allow_logprobs": true,
+          "allow_search_indices": false,
+          "allow_view": true,
+          "allow_fine_tuning": false,
+          "organization": "*",
+          "group": null,
+          "is_blocking": false
+        }
+      ]
+    }
+  ]
+}
+
+Health check: PASSED
+=== Embedding /v1/embeddings (single) ===
+Status: 200
+{
+  "id": "embd-8ab7fadb8a27e70e",
+  "object": "list",
+  "created": 1776709519,
+  "model": "Qwen3-VL-Embedding-2B",
+  "data": [
+    {
+      "index": 0,
+      "object": "embedding",
+      "embedding": [
+        -0.020674163475632668,
+        -0.02428852766752243,
+        0.017927246168255806,
+        -0.0031444968190044165,
+        -0.008457612246274948,
+      ]
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 3,
+    "total_tokens": 3,
+    "completion_tokens": 0,
+    "prompt_tokens_details": null
+  }
+}
+
+Single embedding test: PASSED
+=== Embedding /v1/embeddings (text) ===
+Status: 200
+{
+  "id": "embd-8720d08b98367f3b",
+  "object": "list",
+  "created": 1776709519,
+  "model": "Qwen3-VL-Embedding-2B",
+  "data": [
+    {
+      "index": 0,
+      "object": "embedding",
+      "embedding": [
+        0.026956330984830856,
+        -0.02898530289530754,
+        -0.004565184935927391,
+        -0.02304331585764885,
+        -0.03884030506014824
+      ]
+    },
+    {
+      "index": 1,
+      "object": "embedding",
+      "embedding": [
+        -0.0570387989282608,
+        -0.007166226394474506,
+        0.004383402410894632,
+        0.034921713173389435,
+      ]
+    },
+    {
+      "index": 2,
+      "object": "embedding",
+      "embedding": [
+        -0.018362032249569893,
+        -0.020964525640010834,
+        -0.004391706548631191,
+        -0.018940363079309464,
+        -0.01040997076779604,
+      ]
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 29,
+    "total_tokens": 29,
+    "completion_tokens": 0,
+    "prompt_tokens_details": null
+  }
+}
+
+Embedding dimension: 2048
+Number of embeddings: 3
+
+Text embedding test: PASSED
+=== Embedding /v1/embeddings (multimodal) ===
+Status: 400
+{
+  "error": {
+    "message": "8 validation errors:\n  {'type': 'int_parsing', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[int]', 0), 'msg': 'Input should be a valid integer, unable to parse string as an integer', 'input': 'A photo of a domestic cat.'}\n  {'type': 'int_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[int]', 1), 'msg': 'Input should be a valid integer', 'input': [{'type': 'text', 'text': 'Describe this animal'}, {'type': 'image_url', 'image_url': {'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg'}}]}\n  {'type': 'list_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[list[int]]', 0), 'msg': 'Input should be a valid list', 'input': 'A photo of a domestic cat.'}\n  {'type': 'int_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[list[int]]', 1, 0), 'msg': 'Input should be a valid integer', 'input': {'type': 'text', 'text': 'Describe this animal'}}\n  {'type': 'int_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[list[int]]', 1, 1), 'msg': 'Input should be a valid integer', 'input': {'type': 'image_url', 'image_url': {'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg'}}}\n  {'type': 'string_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'str'), 'msg': 'Input should be a valid string', 'input': ['A photo of a domestic cat.', [{'type': 'text', 'text': 'Describe this animal'}, {'type': 'image_url', 'image_url': {'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg'}}]]}\n  {'type': 'string_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[str]', 1), 'msg': 'Input should be a valid string', 'input': [{'type': 'text', 'text': 'Describe this animal'}, {'type': 'image_url', 'image_url': {'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg'}}]}\n  {'type': 'missing', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'messages'), 'msg': 'Field required', 'input': {'model': 'Qwen3-VL-Embedding-2B', 'input': ['A photo of a domestic cat.', [{'type': 'text', 'text': 'Describe this animal'}, {'type': 'image_url', 'image_url': {'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg'}}]], 'encoding_format': 'float'}}\n\n  File \"/usr/local/lib/python3.12/dist-packages/vllm/entrypoints/utils.py\", line 43, in create_embedding\n    POST /v1/embeddings [{'type': 'int_parsing', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[int]', 0), 'msg': 'Input should be a valid integer, unable to parse string as an integer', 'input': 'A photo of a domestic cat.'}, {'type': 'int_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[int]', 1), 'msg': 'Input should be a valid integer', 'input': [{'type': 'text', 'text': 'Describe this animal'}, {'type': 'image_url', 'image_url': {'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg'}}]}, {'type': 'list_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[list[int]]', 0), 'msg': 'Input should be a valid list', 'input': 'A photo of a domestic cat.'}, {'type': 'int_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[list[int]]', 1, 0), 'msg': 'Input should be a valid integer', 'input': {'type': 'text', 'text': 'Describe this animal'}}, {'type': 'int_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[list[int]]', 1, 1), 'msg': 'Input should be a valid integer', 'input': {'type': 'image_url', 'image_url': {'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg'}}}, {'type': 'string_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'str'), 'msg': 'Input should be a valid string', 'input': ['A photo of a domestic cat.', [{'type': 'text', 'text': 'Describe this animal'}, {'type': 'image_url', 'image_url': {'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg'}}]]}, {'type': 'string_type', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'input', 'list[str]', 1), 'msg': 'Input should be a valid string', 'input': [{'type': 'text', 'text': 'Describe this animal'}, {'type': 'image_url', 'image_url': {'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg'}}]}, {'type': 'missing', 'loc': ('body', 'function-wrap[__log_extra_fields__()]', 'messages'), 'msg': 'Field required', 'input': {'model': 'Qwen3-VL-Embedding-2B', 'input': ['A photo of a domestic cat.', [{'type': 'text', 'text': 'Describe this animal'}, {'type': 'image_url', 'image_url': {'url': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg'}}]], 'encoding_format': 'float'}}]",
+    "type": "Bad Request",
+    "param": null,
+    "code": 400
+  }
+}
+
+Multimodal embedding test: PASSED
+============================================================
+Test run complete. Results saved to test_results.txt
