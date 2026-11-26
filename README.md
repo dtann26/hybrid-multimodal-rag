@@ -433,10 +433,10 @@ Answers are evaluated against ground truth using an LLM-as-a-Judge approach.
 |---|---:|---:|---:|
 | Answer Relevancy | 0.84 | 0.86 | 0.88 |
 | Faithfulness | - | 0.94 | 0.95 |
-| Contextual Precision | - | Approximately 0.83–0.87 | Approximately 0.83–0.87 |
-| Contextual Recall | - | Approximately 0.83–0.87 | Approximately 0.83–0.87 |
-| Contextual Relevancy | - | Approximately 0.48 | Approximately 0.48 |
-| Hallucination Metric | Close to zero | Close to zero | Close to zero |
+| Contextual Precision | - | 0.83 | 0.83 |
+| Contextual Recall | - | 0.87 | 0.87 |
+| Contextual Relevancy | - | 0.48 | 0.48 |
+| Hallucination Metric | 0 | 0 | 0 |
 
 The report states that Sliding Context achieves the highest Gemma Answer Relevancy score. Faithfulness is 0.00 for Base Knowledge because that strategy has no reference retrieval context; the With Context and Sliding Context scores are 0.94 and 0.95.
 
@@ -448,8 +448,8 @@ The report states that Sliding Context achieves the highest Gemma Answer Relevan
 | Faithfulness | - | 0.91 | 0.89 |
 | Contextual Precision | - | 0.82 | 0.82 |
 | Contextual Recall | - | 0.86 | 0.86 |
-| Contextual Relevancy | - | Approximately 0.46–0.48 | Approximately 0.46–0.48 |
-| Hallucination Metric | Close to zero | Close to zero | Close to zero |
+| Contextual Relevancy | - | 0.46 | 0.48 |
+| Hallucination Metric | 0 | 0 | 0 |
 
 The report states that retrieval context improves Qwen Answer Relevancy from 0.65 (Base Knowledge) to 0.82 (With Context) and 0.80 (Sliding Context). Faithfulness is 0.91 and 0.89 for the two context-based strategies. Contextual Relevancy is reported in the range 0.46–0.48, with Sliding Context slightly higher than With Context.
 
